@@ -1,4 +1,4 @@
-module IBMStorwizeMetrics
+module github.com/alex-lata/IBMStorwizeMetrics
 
 go 1.22.1
 
