@@ -22,3 +22,12 @@ go.work
 
 # VS Code
 .vscode
+
+# Executable
+TelegrafIBMStoreWizeMetrics
+
+# Misc
+metrics.out
+
+# Others
+**/.DS_Store
