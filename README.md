@@ -10,7 +10,7 @@ IBMStorwizeMetrics is a Telegraf input plugin designed to interact with IBM Spec
 ## Project Initialization
 To get started with the IBMStorwizeMetrics plugin, clone the repository to your local machine:
 ```bash
-git clone https://github.com/alex-lata/IBMStorwizeMetrics.git
+git clone https://github.com/whatap/IBMStorwizeMetrics.git
 ```
 
 ## Gather Dependencies

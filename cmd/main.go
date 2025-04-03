@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	_ "github.com/alex-lata/IBMStorwizeMetrics/plugins/inputs/IBMStorwizeMetrics"
 	"github.com/influxdata/telegraf/plugins/common/shim"
+	_ "github.com/whatap/IBMStorwizeMetrics/plugins/inputs/IBMStorwizeMetrics"
 )
 
 var pollInterval = flag.Duration("poll_interval", 1*time.Second, "how often to send metrics")
