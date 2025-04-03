@@ -1,7 +1,6 @@
 module github.com/whatap/IBMStorwizeMetrics
 
 go 1.22.1
-
 require github.com/influxdata/telegraf v1.30.0
 
 require (
@@ -17,7 +16,7 @@ require (
 	github.com/coreos/go-semver v0.3.1 // indirect
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
-	github.com/golang-jwt/jwt/v5 v5.2.0 // indirect
+	github.com/golang-jwt/jwt/v5 v5.2.2 // indirect
 	github.com/google/cel-go v0.18.1 // indirect
 	github.com/gosnmp/gosnmp v1.37.0 // indirect
 	github.com/influxdata/toml v0.0.0-20190415235208-270119a8ce65 // indirect
