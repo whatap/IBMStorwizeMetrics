@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -63,72 +62,69 @@ func (authCache *AuthCache) GetToken() (string, error) {
 }
 
 func (authCache *AuthCache) fetchAuthToken() (string, time.Time, error) {
-	// Concatenate /auth to the endpoint URL
 	authURL := authCache.URL + "/auth"
 
-	// Prepare the request to your authentication endpoint
 	req, err := http.NewRequest("POST", authURL, nil)
 	if err != nil {
-		return "Error while authenticating", time.Time{}, err
+		return "", time.Time{}, err
 	}
 
-	// Set custom headers for authentication
 	req.Header.Set("X-Auth-Username", authCache.Username)
 	req.Header.Set("X-Auth-Password", authCache.Password)
 
-	// Create a custom HTTP client with TLS/SSL certificate verification disabled
 	httpClient := &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: authCache.InsecureSkipVerify, // Note: Set to true for development purposes only
+				InsecureSkipVerify: authCache.InsecureSkipVerify,
 			},
 		},
 	}
 
-	// Use the custom HTTP client to make the request
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		return "", time.Time{}, err
 	}
 	defer resp.Body.Close()
 
-	// Check for non-successful response status
 	if resp.StatusCode != http.StatusOK {
-		return "", time.Time{}, errors.New("authentication failed: status code " + resp.Status)
+		return "", time.Time{}, fmt.Errorf("authentication failed: status code %s", resp.Status)
 	}
 
-	// Read the response body
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", time.Time{}, fmt.Errorf("reading response body: %v", err)
 	}
 
-	// Unmarshal the JSON to get the token
-	var authResp AuthResponse
+	// fmt.Println("Auth response body:", string(body)) // 디버깅용
+
+	// 임시 구조체로 응답 파싱
+	var authResp struct {
+		Token string `json:"token"`
+	}
 	if err := json.Unmarshal(body, &authResp); err != nil {
 		return "", time.Time{}, fmt.Errorf("unmarshaling response: %v", err)
 	}
 
-	// Extract the payload from the JWT token
+	// JWT 포맷 여부 확인
 	parts := strings.Split(authResp.Token, ".")
-	if len(parts) != 3 {
-		return "", time.Time{}, errors.New("invalid JWT token received")
-	}
-	payload, err := base64.RawURLEncoding.DecodeString(parts[1])
-	if err != nil {
-		return "", time.Time{}, err
+	if len(parts) == 3 {
+		// JWT인 경우 exp 추출
+		payload, err := base64.RawURLEncoding.DecodeString(parts[1])
+		if err != nil {
+			return "", time.Time{}, fmt.Errorf("decoding JWT payload: %v", err)
+		}
+
+		var claims struct {
+			Exp int64 `json:"exp"`
+		}
+		if err := json.Unmarshal(payload, &claims); err != nil {
+			return "", time.Time{}, fmt.Errorf("unmarshaling JWT payload: %v", err)
+		}
+
+		expires := time.Unix(claims.Exp, 0)
+		return authResp.Token, expires, nil
 	}
 
-	// Parse the payload to extract the exp claim
-	var claims struct {
-		Exp int64 `json:"exp"`
-	}
-	if err := json.Unmarshal(payload, &claims); err != nil {
-		return "", time.Time{}, err
-	}
-
-	// Convert the exp claim to time.Time
-	expires := time.Unix(claims.Exp, 0)
-
-	return authResp.Token, expires, nil
+	// JWT 형식이 아닌 경우: 임의 만료시간 설정 (예: 1시간 후)
+	return authResp.Token, time.Now().Add(1 * time.Hour), nil
 }
